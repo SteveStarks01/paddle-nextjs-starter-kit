@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, DollarSign, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import { formatDate } from '@/lib/utils';
 
 const upcomingPayments = [
   {
@@ -50,7 +51,7 @@ export function StudentPortalPaymentStatus() {
                   <span className={'text-sm font-semibold'}>${payment.amount.toLocaleString()}</span>
                 </div>
                 <p className={'text-xs text-muted-foreground mt-1'}>
-                  Due: {new Date(payment.dueDate).toLocaleDateString()}
+                  Due: {formatDate(payment.dueDate)}
                 </p>
               </div>
             </div>

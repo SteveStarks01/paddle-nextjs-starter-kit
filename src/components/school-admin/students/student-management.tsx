@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { AddStudentDialog } from './add-student-dialog';
 import { BulkUploadDialog } from './bulk-upload-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { formatDate } from '@/lib/utils';
 
 export function StudentManagement() {
   const [enrollments, setEnrollments] = useState<StudentEnrollment[]>([]);
@@ -159,7 +160,7 @@ export function StudentManagement() {
                         <div>
                           <p className="text-sm font-medium">Enrollment</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(enrollment.enrollment_date).toLocaleDateString()}
+                            {formatDate(enrollment.enrollment_date)}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {enrollment.academic_year}

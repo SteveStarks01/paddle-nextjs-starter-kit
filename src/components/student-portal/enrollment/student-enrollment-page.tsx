@@ -9,6 +9,7 @@ import { StudentEnrollment } from '@/lib/school-fee.types';
 import { LoadingScreen } from '@/components/dashboard/layout/loading-screen';
 import { ErrorContent } from '@/components/dashboard/layout/error-content';
 import { Badge } from '@/components/ui/badge';
+import { formatDate } from '@/lib/utils';
 
 export function StudentEnrollmentPage() {
   const [enrollments, setEnrollments] = useState<StudentEnrollment[]>([]);
@@ -98,7 +99,7 @@ export function StudentEnrollmentPage() {
                           <div>
                             <span className="text-muted-foreground">Enrollment Date:</span>
                             <p className="font-medium">
-                              {new Date(enrollment.enrollment_date).toLocaleDateString()}
+                              {formatDate(enrollment.enrollment_date)}
                             </p>
                           </div>
                           <div>

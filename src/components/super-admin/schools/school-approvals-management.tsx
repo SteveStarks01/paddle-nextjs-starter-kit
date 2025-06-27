@@ -15,6 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { formatDate } from '@/lib/utils';
 
 export function SchoolApprovalsManagement() {
   const { toast } = useToast();
@@ -201,11 +202,11 @@ export function SchoolApprovalsManagement() {
                         <div>
                           <p className="text-sm font-medium">Submitted</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(approval.submitted_at).toLocaleDateString()}
+                            {formatDate(approval.submitted_at)}
                           </p>
                           {approval.reviewed_at && (
                             <p className="text-sm text-muted-foreground">
-                              Reviewed: {new Date(approval.reviewed_at).toLocaleDateString()}
+                              Reviewed: {formatDate(approval.reviewed_at)}
                             </p>
                           )}
                         </div>
