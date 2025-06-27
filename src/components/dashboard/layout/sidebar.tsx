@@ -1,9 +1,11 @@
 'use client';
 
-import { Album, CreditCard, Home, GraduationCap, Users, Building, School } from 'lucide-react';
+import { Album, CreditCard, Home, GraduationCap, Users, Building, School, Shield, BarChart3, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
 
 const sidebarItems = [
   {
@@ -64,15 +66,77 @@ const studentPortalItems = [
   },
 ];
 
+const superAdminItems = [
+  {
+    title: 'Super Admin',
+    icon: <Shield className="h-6 w-6" />,
+    href: '/super-admin',
+  },
+  {
+    title: 'School Approvals',
+    icon: <Building className="h-6 w-6" />,
+    href: '/super-admin/schools',
+  },
+  {
+    title: 'Analytics',
+    icon: <BarChart3 className="h-6 w-6" />,
+    href: '/super-admin/analytics',
+  },
+  {
+    title: 'Transactions',
+    icon: <CreditCard className="h-6 w-6" />,
+    href: '/super-admin/transactions',
+  },
+  {
+    title: 'Refunds',
+    icon: <CreditCard className="h-6 w-6" />,
+    href: '/super-admin/refunds',
+  },
+  {
+    title: 'Audit Logs',
+    icon: <Shield className="h-6 w-6" />,
+    href: '/super-admin/audit',
+  },
+  {
+    title: 'Settings',
+    icon: <Settings className="h-6 w-6" />,
+    href: '/super-admin/settings',
+  },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   
   // Determine which section to show based on current path
   const isSchoolAdmin = pathname.startsWith('/school-admin');
   const isStudentPortal = pathname.startsWith('/student-portal');
+  const isSuperAdminPath = pathname.startsWith('/super-admin');
+
+  useEffect(() => {
+    async function checkSuperAdminStatus() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: superAdmin } = await supabase
+          .from('super_admin_users')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .single();
+        
+        setIsSuperAdmin(!!superAdmin);
+      }
+    }
+
+    checkSuperAdminStatus();
+  }, []);
   
   let currentItems = sidebarItems;
-  if (isSchoolAdmin) {
+  if (isSuperAdminPath) {
+    currentItems = superAdminItems;
+  } else if (isSchoolAdmin) {
     currentItems = schoolAdminItems;
   } else if (isStudentPortal) {
     currentItems = studentPortalItems;
@@ -96,11 +160,20 @@ export function Sidebar() {
         ))}
         
         {/* Show navigation links to other sections */}
-        {!isSchoolAdmin && !isStudentPortal && (
+        {!isSuperAdminPath && !isSchoolAdmin && !isStudentPortal && (
           <div className="mt-6 pt-6 border-t border-border">
             <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               School Fee System
             </div>
+            {isSuperAdmin && (
+              <Link
+                href="/super-admin"
+                className="flex items-center text-base gap-3 px-4 py-3 rounded-xxs dashboard-sidebar-items"
+              >
+                <Shield className="h-6 w-6" />
+                Super Admin
+              </Link>
+            )}
             <Link
               href="/school-admin"
               className="flex items-center text-base gap-3 px-4 py-3 rounded-xxs dashboard-sidebar-items"
@@ -118,7 +191,7 @@ export function Sidebar() {
           </div>
         )}
         
-        {(isSchoolAdmin || isStudentPortal) && (
+        {(isSuperAdminPath || isSchoolAdmin || isStudentPortal) && (
           <div className="mt-6 pt-6 border-t border-border">
             <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Other Sections
@@ -130,6 +203,15 @@ export function Sidebar() {
               <Home className="h-6 w-6" />
               Main Dashboard
             </Link>
+            {!isSuperAdminPath && isSuperAdmin && (
+              <Link
+                href="/super-admin"
+                className="flex items-center text-base gap-3 px-4 py-3 rounded-xxs dashboard-sidebar-items"
+              >
+                <Shield className="h-6 w-6" />
+                Super Admin
+              </Link>
+            )}
             {!isSchoolAdmin && (
               <Link
                 href="/school-admin"
