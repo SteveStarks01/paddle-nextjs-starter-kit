@@ -4,15 +4,21 @@ import '../styles/layout.css';
 import { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
+import { initializePaymentGateways } from '@/lib/payment-gateways/initialize';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://paddle-billing.vercel.app'),
-  title: 'AeroEdit',
+  metadataBase: new URL('https://school-fee-platform.vercel.app'),
+  title: 'SchoolFee Platform',
   description:
-    'AeroEdit is a powerful team design collaboration app and image editor. With plans for businesses of all sizes, streamline your workflow with real-time collaboration, advanced editing tools, and seamless project management.',
+    'SchoolFee Platform is a comprehensive school fee management system with mobile money payments. Streamline fee collection with MTN Mobile Money and Orange Money integration.',
 };
+
+// Initialize payment gateways on app startup
+if (typeof window === 'undefined') {
+  initializePaymentGateways();
+}
 
 export default function RootLayout({
   children,

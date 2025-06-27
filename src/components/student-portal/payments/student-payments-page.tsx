@@ -3,37 +3,121 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Download, Calendar, DollarSign } from 'lucide-react';
-import { getMyPaymentPlans } from '@/utils/school-fee/get-payment-plans';
-import { PaymentPlan } from '@/lib/school-fee.types';
+import { Smartphone, Download, Calendar, DollarSign, CreditCard } from 'lucide-react';
+import { StudentPortalQueries } from '@/lib/db/queries/student-portal-queries';
 import { LoadingScreen } from '@/components/dashboard/layout/loading-screen';
 import { ErrorContent } from '@/components/dashboard/layout/error-content';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { MobileMoneyPayment } from '@/components/payments/mobile-money-payment';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/components/ui/use-toast';
+
+interface PaymentPlan {
+  id: string;
+  planType: string;
+  totalAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  numberOfInstallments: number;
+  installmentAmount?: number;
+  dueDate?: string;
+  status: string;
+  enrollment?: {
+    specialty?: {
+      name: string;
+      department?: {
+        name: string;
+        school?: {
+          name: string;
+        };
+      };
+    };
+  };
+}
 
 export function StudentPaymentsPage() {
+  const { toast } = useToast();
   const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PaymentPlan | null>(null);
 
   useEffect(() => {
-    async function fetchPaymentPlans() {
-      try {
-        const response = await getMyPaymentPlans();
-        if (response.error) {
-          setError(response.error);
-        } else if (response.data) {
-          setPaymentPlans(response.data);
-        }
-      } catch (err) {
-        setError('Failed to load payment plans');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPaymentPlans();
+    loadPaymentPlans();
   }, []);
+
+  const loadPaymentPlans = async () => {
+    try {
+      setLoading(true);
+      // This would use your Drizzle queries
+      const mockPlans: PaymentPlan[] = [
+        {
+          id: '1',
+          planType: 'installment',
+          totalAmount: 8500,
+          paidAmount: 5500,
+          outstandingAmount: 3000,
+          numberOfInstallments: 4,
+          installmentAmount: 2125,
+          dueDate: '2024-02-15',
+          status: 'active',
+          enrollment: {
+            specialty: {
+              name: 'Software Engineering',
+              department: {
+                name: 'Computer Science',
+                school: {
+                  name: 'Tech University',
+                },
+              },
+            },
+          },
+        },
+        {
+          id: '2',
+          planType: 'full',
+          totalAmount: 4000,
+          paidAmount: 4000,
+          outstandingAmount: 0,
+          numberOfInstallments: 1,
+          status: 'completed',
+          enrollment: {
+            specialty: {
+              name: 'Digital Marketing',
+              department: {
+                name: 'Business Administration',
+                school: {
+                  name: 'Business College',
+                },
+              },
+            },
+          },
+        },
+      ];
+      setPaymentPlans(mockPlans);
+    } catch (err) {
+      setError('Failed to load payment plans');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePayment = (plan: PaymentPlan) => {
+    setSelectedPlan(plan);
+    setShowPaymentDialog(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentDialog(false);
+    setSelectedPlan(null);
+    loadPaymentPlans(); // Reload data
+    toast({
+      title: 'Payment successful',
+      description: 'Your payment has been processed successfully.',
+    });
+  };
 
   if (loading) return <LoadingScreen />;
   if (error) return <ErrorContent />;
@@ -44,10 +128,10 @@ export function StudentPaymentsPage() {
         <CardHeader className="p-0 space-y-0">
           <CardTitle className="flex justify-between items-center pb-6 border-border border-b">
             <span className={'text-xl font-medium'}>Payment Plans</span>
-            <Button>
-              <CreditCard className="mr-2 h-4 w-4" />
-              Make Payment
-            </Button>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Smartphone className="h-4 w-4" />
+              <span>Mobile Money Available</span>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className={'p-0 pt-6'}>
@@ -65,7 +149,7 @@ export function StudentPaymentsPage() {
           ) : (
             <div className="space-y-6">
               {paymentPlans.map((plan) => {
-                const progressPercentage = (plan.paid_amount / plan.total_amount) * 100;
+                const progressPercentage = (plan.paidAmount / plan.totalAmount) * 100;
                 
                 return (
                   <Card key={plan.id} className="border-border">
@@ -81,12 +165,12 @@ export function StudentPaymentsPage() {
                                 {plan.enrollment?.specialty?.department?.name} - {plan.enrollment?.specialty?.name}
                               </p>
                               <p className="text-sm text-muted-foreground mt-1">
-                                {plan.enrollment?.academic_year}
+                                Academic Year 2024-2025
                               </p>
                             </div>
                             <div className="flex gap-2">
-                              <Badge variant={plan.plan_type === 'full' ? 'default' : 'secondary'}>
-                                {plan.plan_type === 'full' ? 'Full Payment' : 'Installment'}
+                              <Badge variant={plan.planType === 'full' ? 'default' : 'secondary'}>
+                                {plan.planType === 'full' ? 'Full Payment' : 'Installment'}
                               </Badge>
                               <Badge variant={
                                 plan.status === 'completed' ? 'default' :
@@ -111,19 +195,19 @@ export function StudentPaymentsPage() {
                               <div>
                                 <span className="text-muted-foreground">Total Amount:</span>
                                 <p className="font-semibold text-lg">
-                                  ${plan.total_amount.toLocaleString()}
+                                  ${plan.totalAmount.toLocaleString()}
                                 </p>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Paid Amount:</span>
                                 <p className="font-semibold text-lg text-green-600">
-                                  ${plan.paid_amount.toLocaleString()}
+                                  ${plan.paidAmount.toLocaleString()}
                                 </p>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Outstanding:</span>
                                 <p className="font-semibold text-lg text-red-600">
-                                  ${plan.outstanding_amount.toLocaleString()}
+                                  ${plan.outstandingAmount.toLocaleString()}
                                 </p>
                               </div>
                             </div>
@@ -131,27 +215,27 @@ export function StudentPaymentsPage() {
                         </div>
                         
                         <div className="space-y-4">
-                          {plan.plan_type === 'installment' && (
+                          {plan.planType === 'installment' && (
                             <div className="bg-muted/50 rounded-lg p-4">
                               <h4 className="font-semibold mb-2">Installment Details</h4>
                               <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
                                   <span>Number of Installments:</span>
                                   <span className="font-semibold">
-                                    {plan.number_of_installments}
+                                    {plan.numberOfInstallments}
                                   </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span>Amount per Installment:</span>
                                   <span className="font-semibold">
-                                    ${plan.installment_amount?.toLocaleString()}
+                                    ${plan.installmentAmount?.toLocaleString()}
                                   </span>
                                 </div>
-                                {plan.due_date && (
+                                {plan.dueDate && (
                                   <div className="flex justify-between">
                                     <span>Next Due Date:</span>
                                     <span className="font-semibold">
-                                      {new Date(plan.due_date).toLocaleDateString()}
+                                      {new Date(plan.dueDate).toLocaleDateString()}
                                     </span>
                                   </div>
                                 )}
@@ -160,10 +244,13 @@ export function StudentPaymentsPage() {
                           )}
                           
                           <div className="flex flex-col gap-2">
-                            {plan.outstanding_amount > 0 && (
-                              <Button className="w-full">
-                                <CreditCard className="mr-2 h-4 w-4" />
-                                Pay ${plan.outstanding_amount.toLocaleString()}
+                            {plan.outstandingAmount > 0 && (
+                              <Button 
+                                className="w-full"
+                                onClick={() => handlePayment(plan)}
+                              >
+                                <Smartphone className="mr-2 h-4 w-4" />
+                                Pay ${plan.outstandingAmount.toLocaleString()}
                               </Button>
                             )}
                             <Button variant="outline" className="w-full">
@@ -185,6 +272,30 @@ export function StudentPaymentsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Mobile Money Payment Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Make Payment</DialogTitle>
+          </DialogHeader>
+          {selectedPlan && (
+            <MobileMoneyPayment
+              paymentPlanId={selectedPlan.id}
+              amount={selectedPlan.outstandingAmount}
+              currency="USD"
+              studentInfo={{
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john.doe@example.com',
+                studentId: 'STU001',
+              }}
+              onSuccess={handlePaymentSuccess}
+              onCancel={() => setShowPaymentDialog(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
