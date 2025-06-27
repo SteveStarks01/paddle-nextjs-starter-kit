@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import dayjs from "dayjs"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -9,10 +10,6 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDate(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
-  // Use a consistent format that works the same on server and client
-  const year = dateObj.getFullYear();
-  const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
-  const day = dateObj.getDate();
-  
-  return `${month} ${day}, ${year}`;
+  // Use dayjs for consistent formatting across server and client
+  return dayjs(dateObj).format('MMM DD, YYYY');
 }
