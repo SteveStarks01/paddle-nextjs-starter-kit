@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PaymentGatewayFactory } from '@/lib/payment-gateways/gateway-factory';
 import { PaymentService } from '@/lib/payment-gateways/payment-service';
+import { initializePaymentGateways } from '@/lib/payment-gateways/initialize';
+
+// Initialize payment gateways
+initializePaymentGateways();
 
 export async function POST(
   request: NextRequest,

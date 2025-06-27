@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PaymentService } from '@/lib/payment-gateways/payment-service';
 import { createClient } from '@/utils/supabase/server';
+import { initializePaymentGateways } from '@/lib/payment-gateways/initialize';
+
+// Initialize payment gateways
+initializePaymentGateways();
 
 export async function POST(request: NextRequest) {
   try {
